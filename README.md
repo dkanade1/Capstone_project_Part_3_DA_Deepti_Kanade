@@ -1,6 +1,10 @@
 # Part 3 — GenAI-Powered Text Analytics: Prompt Engineering & LLM API Integration 
 ### Database Schema :Women's E-Commerce Clothing Reviews
 This is a Women’s Clothing E-Commerce dataset revolving around the reviews written by customers. Each row corresponds to a customer review, and includes the variables:Clothing ID,Age,Title,Review Text,Rating,Recommended IND,Positive Feedback Count,Division Name,Department Name, Class Name.
+## Prerequisites
+Before getting started, make sure your development environment meets the following requirements:
+Python: Version 3.11 
+
 
 ## Task 1.	Design three prompt templates 
 # Zero-Shot Prompt Template
