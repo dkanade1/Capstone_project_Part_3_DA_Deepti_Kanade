@@ -131,3 +131,138 @@ Output
 Review:
 {review}
 ```
+**Here is the retry logic for call_llm() failures (network error, rate limit, or non-200/error response),It  retries up to 3 times before logging a descriptive error and moving on,**
+```
+def call_llm(prompt, temperature=0.2, max_tokens=300):
+    """
+    Send a prompt to OpenRouter and return the model's response.
+    Retries up to 3 times if an error occurs.
+    """
+
+    retries = 3
+
+    for attempt in range(retries):
+
+        try:
+
+            response = client.chat.completions.create(
+                model="openai/gpt-oss-20b:free",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": prompt
+                    }
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+
+            return response.choices[0].message.content
+
+        except Exception as e:
+
+            logging.warning(
+                f"Attempt {attempt+1}/{retries} failed: {e}"
+            )
+
+            if attempt < retries - 1:
+                time.sleep(5)
+            else:
+                logging.error(
+                    "LLM request failed after 3 attempts."
+                )
+                return None
+
+```
+**Output showing retries after api call fails due to too many requests**
+```
+"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The reviewer explicitly states the material feels cheap, expresses disappointment, and indicates they will return the item.', 'template': 'Zero-shot', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 24.000000 seconds
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+```
+
+**Here is the error handling code for Json parsing.It removes the leading and  trailing quotes from the Json response and load it**
+```
+        try:
+            response = re.sub(r"^```json\s*", "", response.strip())
+            response = re.sub(r"^```\s*", "", response)
+            response = re.sub(r"\s*```$", "", response)
+            parsed = json.loads(response)
+
+            parsed["template"] = template_name
+            parsed["record"] = idx
+
+            results.append(parsed)
+
+            print(parsed)
+
+        except json.JSONDecodeError:
+
+            logging.error(
+                f"JSON parsing failed "
+                f"(Template={template_name}, Record={idx})"
+            )
+```
+ **Here is the output of call_llm executed for each prompt template on 5 reviews and its comparison***
+
+```
+"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The reviewer explicitly states the material feels cheap, expresses disappointment, and indicates they will return the item.', 'template': 'Zero-shot', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 24.000000 seconds
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The review repeatedly criticizes the product for being itchy, uncomfortable, thin, flimsy, and lacking support, indicating a clear negative sentiment.', 'template': 'Zero-shot', 'record': 1}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Neutral', 'confidence': 'Medium', 'reason': 'The reviewer notes that the dress arrived on time and the color/style match the description, indicating some satisfaction. However, they also mention it is not exactly what they imagined, showing a mild disappointment. The overall tone balances positive and negative points, leading to a neutral classification.', 'template': 'Zero-shot', 'record': 2}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Positive', 'confidence': 'High', 'reason': 'The review highlights several positive aspects—nice color, good match with skirts and pants, and overall satisfaction with the look—while the only negative points are about sizing and fit. The tone is constructive rather than critical, and the reviewer ultimately kept the item, indicating a favorable overall impression.', 'template': 'Zero-shot', 'record': 3}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 24.000000 seconds
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Positive', 'confidence': 'High', 'reason': 'The review contains enthusiastic praise such as "love this shirt," "very flattering," and "perfect length," indicating a clear positive sentiment.', 'template': 'Zero-shot', 'record': 4}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The reviewer expresses strong dissatisfaction, noting the material feels cheap, disappointment, and plans to return the item.', 'template': 'Few-shot', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The reviewer expresses strong dissatisfaction with the product, citing itchy tags, lack of comfort, and insufficient support, indicating a negative overall sentiment.', 'template': 'Few-shot', 'record': 1}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Neutral', 'confidence': 'Medium', 'reason': 'The review notes timely delivery and that the color and style match the description, but also expresses mild disappointment that it did not meet the buyer’s exact expectations.', 'template': 'Few-shot', 'record': 2}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Neutral', 'confidence': 'Medium', 'reason': 'The review highlights positive aspects (good color, versatile pairing) while also noting sizing and fit issues, resulting in a balanced overall sentiment.', 'template': 'Few-shot', 'record': 3}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Positive', 'confidence': 'High', 'reason': 'The reviewer highlights many positive aspects—flattering fit, adjustable tie, perfect length, sleeveless design, versatility with cardigans—and ends with "love this shirt!!!" indicating strong satisfaction.', 'template': 'Few-shot', 'record': 4}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The review expresses disappointment, criticizes the material as cheap, and states the item will be returned.', 'template': 'Role', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The review expresses dissatisfaction with the product’s comfort, support, and quality, describing it as itchy, thin, flimsy, and lacking support.', 'template': 'Role', 'record': 1}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Neutral', 'confidence': 'Medium', 'reason': 'The review acknowledges timely delivery and similarity to description, but also notes a mismatch with expectations, indicating a balanced sentiment.', 'template': 'Role', 'record': 2}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Positive', 'confidence': 'Medium', 'reason': 'The review highlights several positive points about the top—its color, style compatibility, and overall look—while mentioning only a few minor sizing issues. The overall tone is favorable, indicating a positive sentiment.', 'template': 'Role', 'record': 3}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Positive', 'confidence': 'High', 'reason': 'The review expresses strong positive feelings, praising the shirt’s flattering fit, adjustable front tie, perfect length, and versatility, ending with "love this shirt!!!"', 'template': 'Role', 'record': 4}
+       label confidence                                                                                                                                                                                                                                                                                                                             reason   template  record
+0   Negative       High                                                                                                                                                                                                        The reviewer explicitly states the material feels cheap, expresses disappointment, and indicates they will return the item.  Zero-shot       0
+1   Negative       High                                                                                                                                                                             The review repeatedly criticizes the product for being itchy, uncomfortable, thin, flimsy, and lacking support, indicating a clear negative sentiment.  Zero-shot       1
+2    Neutral     Medium            The reviewer notes that the dress arrived on time and the color/style match the description, indicating some satisfaction. However, they also mention it is not exactly what they imagined, showing a mild disappointment. The overall tone balances positive and negative points, leading to a neutral classification.  Zero-shot       2
+3   Positive       High  The review highlights several positive aspects—nice color, good match with skirts and pants, and overall satisfaction with the look—while the only negative points are about sizing and fit. The tone is constructive rather than critical, and the reviewer ultimately kept the item, indicating a favorable overall impression.  Zero-shot       3
+4   Positive       High                                                                                                                                                                                 The review contains enthusiastic praise such as "love this shirt," "very flattering," and "perfect length," indicating a clear positive sentiment.  Zero-shot       4
+5   Negative       High                                                                                                                                                                                                      The reviewer expresses strong dissatisfaction, noting the material feels cheap, disappointment, and plans to return the item.   Few-shot       0
+6   Negative       High                                                                                                                                                             The reviewer expresses strong dissatisfaction with the product, citing itchy tags, lack of comfort, and insufficient support, indicating a negative overall sentiment.   Few-shot       1
+7    Neutral     Medium                                                                                                                                                   The review notes timely delivery and that the color and style match the description, but also expresses mild disappointment that it did not meet the buyer’s exact expectations.   Few-shot       2
+8    Neutral     Medium                                                                                                                                                                         The review highlights positive aspects (good color, versatile pairing) while also noting sizing and fit issues, resulting in a balanced overall sentiment.   Few-shot       3
+9   Positive       High                                                                                                                     The reviewer highlights many positive aspects—flattering fit, adjustable tie, perfect length, sleeveless design, versatility with cardigans—and ends with "love this shirt!!!" indicating strong satisfaction.   Few-shot       4
+10  Negative       High                                                                                                                                                                                                                       The review expresses disappointment, criticizes the material as cheap, and states the item will be returned.       Role       0
+11  Negative       High                                                                                                                                                                                  The review expresses dissatisfaction with the product’s comfort, support, and quality, describing it as itchy, thin, flimsy, and lacking support.       Role       1
+12   Neutral     Medium                                                                                                                                                                               The review acknowledges timely delivery and similarity to description, but also notes a mismatch with expectations, indicating a balanced sentiment.       Role       2
+13  Positive     Medium                                                                                                      The review highlights several positive points about the top—its color, style compatibility, and overall look—while mentioning only a few minor sizing issues. The overall tone is favorable, indicating a positive sentiment.       Role       3
+14  Positive       High                                                                                                                                                        The review expresses strong positive feelings, praising the shirt’s flattering fit, adjustable front tie, perfect length, and versatility, ending with "love this shirt!!!"       Role       4
+
+Process finished with exit code 0
+
+```
+
+**The few-shot,zero shot  and role-prompted templates performed well in terms of classification results and JSON/schema conformity.Only the 4th  review was classified as Positive by zero-shot and role-prompted ,whereas Neutral by few-shot template. All achieved valid, schema-conformant responses.But based on the Output quality, i.e the reason being concise and relevant ,the role based prompt can be considered superior templates in this particular case.**
