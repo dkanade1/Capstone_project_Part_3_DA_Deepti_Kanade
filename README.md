@@ -10,32 +10,22 @@ Python: Version 3.11
 # Zero-Shot Prompt Template
 ```
 You are given a customer review from a women's e-commerce clothing store.
-
 Task:
-Classify the overall sentiment expressed in the review text.
-
+Classify the overall sentiment expressed in the review text.Estimate your confidence and Briefly explain the evidence supporting your decision.
 Sentiment labels:
 - Positive
 - Neutral
 - Negative
 
-Instructions:
-- Base your decision only on the review text.
-- Ignore any numerical rating or metadata.
-- Choose the single best sentiment label.
-- Estimate your confidence.
-- Briefly explain the evidence supporting your decision.
-
 Respond ONLY using the following JSON schema:
-
-{
+{{
   "label": "Positive | Neutral | Negative",
   "confidence": "Low | Medium | High",
   "reason": "string"
-}
+}}
 
 Review:
-{{review_text}}
+{review}
 
 ```
 # Few-Shot Prompt Template
@@ -43,7 +33,7 @@ Review:
 You are given a customer review from a women's e-commerce clothing store.
 
 Task:
-Classify the overall sentiment expressed in the review text.
+Classify the overall sentiment expressed in the review text.Estimate your confidence and Briefly explain the evidence supporting your decision.
 
 Sentiment labels:
 - Positive
@@ -51,12 +41,11 @@ Sentiment labels:
 - Negative
 
 Respond ONLY using this JSON schema:
-
-{
+{{
   "label": "Positive | Neutral | Negative",
   "confidence": "Low | Medium | High",
   "reason": "string"
-}
+}}
 
 Examples
 
@@ -125,16 +114,20 @@ Constraints
 - Do not infer information not stated.
 - Provide a brief evidence-based explanation.
 - Respond only in valid JSON.
-- Do not include markdown, comments, or additional text.
+Do Not:
+- wrap the JSON in ```json
+- include markdown
+- include explanations
+- include any text before or after the JSON
 
 Output
 
-{
+{{
   "label": "Positive | Neutral | Negative",
   "confidence": "Low | Medium | High",
   "reason": "string"
-}
+}}
 
 Review:
-{{review_text}}
+{review}
 ```
