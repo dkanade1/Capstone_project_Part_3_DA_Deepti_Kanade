@@ -206,7 +206,7 @@ INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTT
                 f"(Template={template_name}, Record={idx})"
             )
 ```
- **Here is the output of call_llm executed for each prompt template on 5 reviews and its comparison***
+ **Here is the output of call_llm executed for each prompt template(zero shot, few shot and role based prompt) on 5 reviews and its comparison***
 
 ```
 "C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
@@ -266,3 +266,71 @@ Process finished with exit code 0
 ```
 
 **The few-shot,zero shot  and role-prompted templates performed well in terms of classification results and JSON/schema conformity.Only the 4th  review was classified as Positive by zero-shot and role-prompted ,whereas Neutral by few-shot template. All achieved valid, schema-conformant responses.But based on the Output quality, i.e the reason being concise and relevant ,the role based prompt can be considered superior templates in this particular case.**
+
+## Task 5.	Build an aspect-based sentiment extension
+**Modified prompt**
+```
+Role
+
+Act as a senior customer-insights analyst specializing in women's fashion e-commerce reviews.
+
+Instruction
+
+Analyze the customer review and determine the sentiment for each aspect.
+
+Context
+
+The review comes from a women's clothing e-commerce store.
+
+Evaluate these aspects:
+
+1. Fit & Sizing
+2. Material & Quality
+
+Constraints
+
+- For each aspect assign exactly one sentiment:
+  - Positive
+  - Neutral
+  - Negative
+- Base your decision only on the review text.
+- If an aspect is not mentioned, assign "Neutral".
+- Provide one short actionable phrase (3–6 words) describing what the customer liked or disliked for each aspect.
+- Respond ONLY with valid JSON.
+- Do not use markdown.
+- Do not include any additional text.
+
+Output
+
+{{
+  "fit_sizing": {{
+    "sentiment": "Positive | Neutral | Negative",
+    "action": "3-6 word phrase"
+  }},
+  "material_quality": {{
+    "sentiment": "Positive | Neutral | Negative",
+    "action": "3-6 word phrase"
+  }}
+}}
+
+Review:
+{review}
+"""
+```
+**Result of aspect-based sentiment analysis in a tabular format for fit_sizing and material_quality**
+```
+   record fit_sentiment                          fit_action material_sentiment                material_action
+0       0       Neutral                No fit info provided           Negative           Material feels cheap
+1       1      Negative             Lacks support for B cup           Negative         Itchy, flimsy material
+2       2       Neutral                  No feedback on fit            Neutral        No feedback on material
+3       3      Negative        Size too large, sleeves long            Neutral           No material feedback
+4       4      Positive         Adjustable tie enhances fit            Neutral         Material not mentioned
+5       5      Negative          Too large for petite frame            Neutral  No material feedback provided
+6       6      Negative             Fit too loose, XS small            Neutral         Material not discussed
+7       7      Negative               Too big, sleeves long            Neutral         No comment on material
+8       8      Positive      Flattering fit after sizing up            Neutral         No mention of material
+9       9      Positive  Fits perfectly, snug but not tight           Positive  Tulle longer than base fabric
+
+Process finished with exit code 0
+```
+
