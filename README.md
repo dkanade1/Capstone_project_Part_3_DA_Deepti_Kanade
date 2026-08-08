@@ -4,10 +4,11 @@ This is a Women’s Clothing E-Commerce dataset revolving around the reviews wri
 ## Prerequisites
 Before getting started, make sure your development environment meets the following requirements:
 Python: Version 3.11 
-
+For the rest refer to requirements.txt
 
 ## Task 1.	Design three prompt templates 
 # Zero-Shot Prompt Template
+The zero-shot prompt provides instructions and the required JSON schema but does not provide worked examples.
 ```
 You are given a customer review from a women's e-commerce clothing store.
 Task:
@@ -29,6 +30,9 @@ Review:
 
 ```
 # Few-Shot Prompt Template
+The few-shot prompt uses the same basic classification instruction but includes three worked examples.
+This gives the model examples of the expected classification behavior and JSON format before it receives the new review.
+
 ```
 You are given a customer review from a women's e-commerce clothing store.
 
@@ -90,7 +94,8 @@ Now classify the following review.
 Review:
 {{review_text}}
 ```
-# Role-Prompted Template (Using ECO Framework)
+# Role-Based Template (Using ECO Framework)
+The role-prompted template begins with an explicit persona. It explicitly applies the ECO framework:Instruction, Context and Constraints for the LLM.
 ```
 Role
 
@@ -132,6 +137,38 @@ Review:
 {review}
 ```
 **Here is the retry logic for call_llm() failures (network error, rate limit, or non-200/error response),It  retries up to 3 times before logging a descriptive error and moving on,**
+Error Handling
+
+Several forms of error handling were included in the project.
+
+API errors
+
+API failures are retried up to three times.
+
+JSON parsing errors
+
+Invalid JSON responses are caught using:
+
+try:
+    parsed = json.loads(response)
+except json.JSONDecodeError:
+    ...
+
+The program logs the template and record instead of terminating.
+
+Missing reviews
+
+Records without review text are removed before processing:
+
+df["Review Text"].dropna()
+Invalid model output
+
+The system removes accidental Markdown code fences before attempting JSON parsing:
+
+response = re.sub(r"^```json\s*", "", response.strip())
+response = re.sub(r"^```\s*", "", response)
+response = re.sub(r"\s*```$", "", response)
+
 ```
 def call_llm(prompt, temperature=0.2, max_tokens=300):
     """
@@ -205,6 +242,27 @@ INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTT
                 f"JSON parsing failed "
                 f"(Template={template_name}, Record={idx})"
             )
+```
+## Task 2.	Implement a reusable API wrapper
+ A reusable Python function called call_llm() was implemented.
+The function:
+Accepts a prompt
+Accepts temperature
+Accepts max_tokens
+Sends the request to the LLM
+Returns the model's text response
+
+The API key is loaded from an environment variable rather than being hardcoded in the source code . **Environment variable used :"OPENROUTER_API_KEY"**
+```
+api_key = os.getenv("OPENROUTER_API_KEY")
+
+if api_key is None:
+    raise ValueError("OPENROUTER_API_KEY not found.")
+
+client = OpenAI(
+    api_key=api_key,
+    base_url="https://openrouter.ai/api/v1"
+)
 ```
  **Here is the output of call_llm executed for each prompt template(zero shot, few shot and role based prompt) on 5 reviews and its comparison***
 
