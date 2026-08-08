@@ -333,4 +333,9 @@ Review:
 
 Process finished with exit code 0
 ```
+## Task 6: Chained Response Drafting
 
+The structured aspect sentiment output from Task 5 was passed into a second
+LLM prompt to generate a customer-facing response. The drafting prompt was
+instructed to address the specific issues identified for each record rather
+than producing a generic response
