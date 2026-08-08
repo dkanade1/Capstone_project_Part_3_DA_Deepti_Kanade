@@ -339,3 +339,37 @@ The structured aspect sentiment output from Task 5 was passed into a second
 LLM prompt to generate a customer-facing response. The drafting prompt was
 instructed to address the specific issues identified for each record rather
 than producing a generic response
+```
+"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'fit_sizing': {'sentiment': 'Neutral', 'action': 'No comment on fit'}, 'material_quality': {'sentiment': 'Negative', 'action': 'Material feels cheap and low quality'}, 'template': 'Role', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+DRAFTED REPLY:
+I'm sorry to hear that the material feels cheap; we appreciate your feedback and will review our quality standards to ensure a better experience.
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'fit_sizing': {'sentiment': 'Negative', 'action': 'Lacks support for B cup'}, 'material_quality': {'sentiment': 'Negative', 'action': 'Itchy tags, uncomfortable'}, 'template': 'Role', 'record': 1}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+DRAFTED REPLY:
+{"response":"I’m sorry to hear the bra doesn’t provide enough support for your B cup and that the tags are itchy; we appreciate your feedback and will work to improve both fit and comfort."}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 22.000000 seconds
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'fit_sizing': {'sentiment': 'Neutral', 'action': 'No fit details provided'}, 'material_quality': {'sentiment': 'Neutral', 'action': 'No material details provided'}, 'template': 'Role', 'record': 2}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+DRAFTED REPLY:
+{"reply":"Thank you for contacting us; we’re happy to help with any questions about fit, sizing, or material."}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'fit_sizing': {'sentiment': 'Negative', 'action': 'Size runs large, sleeves long'}, 'material_quality': {'sentiment': 'Neutral', 'action': 'No material comments'}, 'template': 'Role', 'record': 3}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK
+DRAFTED REPLY:
+I’m sorry to hear that the size runs large and the sleeves are longer than expected. We appreciate your feedback and will keep it in mind as we continue to improve our fit.
+
+   Record Fit Sentiment                     Fit_Action Material sentiment                       Material Action                                                                                                                                                                                Manager Response
+0       0       Neutral              No comment on fit           Negative  Material feels cheap and low quality                                               I'm sorry to hear that the material feels cheap; we appreciate your feedback and will review our quality standards to ensure a better experience.
+1       1      Negative        Lacks support for B cup           Negative             Itchy tags, uncomfortable  {"response":"I’m sorry to hear the bra doesn’t provide enough support for your B cup and that the tags are itchy; we appreciate your feedback and will work to improve both fit and comfort."}
+2       2       Neutral        No fit details provided            Neutral          No material details provided                                                                                 {"reply":"Thank you for contacting us; we’re happy to help with any questions about fit, sizing, or material."}
+3       3      Negative  Size runs large, sleeves long            Neutral                  No material comments                    I’m sorry to hear that the size runs large and the sleeves are longer than expected. We appreciate your feedback and will keep it in mind as we continue to improve our fit.
+
+Process finished with exit code 0
+
+```
