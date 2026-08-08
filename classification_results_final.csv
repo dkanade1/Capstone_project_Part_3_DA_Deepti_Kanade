@@ -1,0 +1,16 @@
+label,confidence,reason,template,record
+Negative,High,"The reviewer explicitly states the material feels cheap, expresses disappointment, and indicates they will return the item.",Zero-shot,0
+Negative,High,"The review repeatedly criticizes the product for being itchy, uncomfortable, thin, flimsy, and lacking support, indicating a clear negative sentiment.",Zero-shot,1
+Neutral,Medium,"The reviewer notes that the dress arrived on time and the color/style match the description, indicating some satisfaction. However, they also mention it is not exactly what they imagined, showing a mild disappointment. The overall tone balances positive and negative points, leading to a neutral classification.",Zero-shot,2
+Positive,High,"The review highlights several positive aspects—nice color, good match with skirts and pants, and overall satisfaction with the look—while the only negative points are about sizing and fit. The tone is constructive rather than critical, and the reviewer ultimately kept the item, indicating a favorable overall impression.",Zero-shot,3
+Positive,High,"The review contains enthusiastic praise such as ""love this shirt,"" ""very flattering,"" and ""perfect length,"" indicating a clear positive sentiment.",Zero-shot,4
+Negative,High,"The reviewer expresses strong dissatisfaction, noting the material feels cheap, disappointment, and plans to return the item.",Few-shot,0
+Negative,High,"The reviewer expresses strong dissatisfaction with the product, citing itchy tags, lack of comfort, and insufficient support, indicating a negative overall sentiment.",Few-shot,1
+Neutral,Medium,"The review notes timely delivery and that the color and style match the description, but also expresses mild disappointment that it did not meet the buyer’s exact expectations.",Few-shot,2
+Neutral,Medium,"The review highlights positive aspects (good color, versatile pairing) while also noting sizing and fit issues, resulting in a balanced overall sentiment.",Few-shot,3
+Positive,High,"The reviewer highlights many positive aspects—flattering fit, adjustable tie, perfect length, sleeveless design, versatility with cardigans—and ends with ""love this shirt!!!"" indicating strong satisfaction.",Few-shot,4
+Negative,High,"The review expresses disappointment, criticizes the material as cheap, and states the item will be returned.",Role,0
+Negative,High,"The review expresses dissatisfaction with the product’s comfort, support, and quality, describing it as itchy, thin, flimsy, and lacking support.",Role,1
+Neutral,Medium,"The review acknowledges timely delivery and similarity to description, but also notes a mismatch with expectations, indicating a balanced sentiment.",Role,2
+Positive,Medium,"The review highlights several positive points about the top—its color, style compatibility, and overall look—while mentioning only a few minor sizing issues. The overall tone is favorable, indicating a positive sentiment.",Role,3
+Positive,High,"The review expresses strong positive feelings, praising the shirt’s flattering fit, adjustable front tie, perfect length, and versatility, ending with ""love this shirt!!!""",Role,4

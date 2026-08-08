@@ -1,0 +1,5 @@
+Record,Fit Sentiment,Fit_Action,Material sentiment,Material Action,Manager Response
+0,Neutral,Fit not discussed,Negative,Material feels cheap,I’m sorry to hear that the material feels cheap; we appreciate your feedback and will review it with our product team. Thank you for sharing your experience.
+1,Negative,No support for B cup,Negative,"Itchy tags, flimsy fabric","{""message"":""I'm sorry to hear that the size didn't fit and the fabric felt uncomfortable; we appreciate your feedback and will look into improving our sizing options and material quality.""}"
+2,Neutral,No fit details provided,Neutral,No material details provided,"Thank you for reaching out; we’re happy to help with any questions you have about fit, sizing, or material quality."
+3,Negative,Too big and loose fit,Neutral,No material feedback provided,"I’m sorry to hear the item feels too big and loose; thank you for sharing your experience, and we’ll keep your feedback in mind as we continue to improve our sizing."
