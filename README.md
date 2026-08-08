@@ -268,7 +268,7 @@ Process finished with exit code 0
 **The few-shot,zero shot  and role-prompted templates performed well in terms of classification results and JSON/schema conformity.Only the 4th  review was classified as Positive by zero-shot and role-prompted ,whereas Neutral by few-shot template. All achieved valid, schema-conformant responses.But based on the Output quality, i.e the reason being concise and relevant ,the role based prompt can be considered superior templates in this particular case.**
 
 ## Task 5.	Build an aspect-based sentiment extension
-**Modified prompt**
+**Modified prompt to do aspect-based sentiment analysis**
 ```
 Role
 
@@ -338,7 +338,122 @@ Process finished with exit code 0
 The structured aspect sentiment output from Task 5 was passed into a second
 LLM prompt to generate a customer-facing response. The drafting prompt was
 instructed to address the specific issues identified for each record rather
-than producing a generic response
+than producing a generic response.
+
+- **Here is the response prompt that accepts the aspect_analysis i.e the result of the first prompt**
+```
+"""
+Act as a professional and empathetic customer service representative for a
+women's clothing e-commerce store.
+
+Instruction
+
+Write a short, professional, and empathetic response to the customer based
+on the structured sentiment analysis provided below.
+
+Context
+
+The structured analysis identifies the customer's sentiment about:
+- Fit & Sizing
+- Material & Quality
+
+Use these specific findings to make the response relevant to this customer.
+
+Constraints
+
+- Address the specific issues mentioned in the analysis.
+- Acknowledge positive points when present.
+- Show empathy for negative experiences.
+- Do not invent refunds, discounts, replacements, or other actions unless
+  explicitly stated in the input.
+- Keep the response concise: 1-2 sentences.
+- Use a professional and friendly customer-service tone.
+- Do not mention sentiment labels or the analysis.
+- Respond with ONLY the customer-facing reply.
+- Do not use JSON or Markdown.
+
+Structured analysis:
+{aspect_analysis}
+"""
+
+```
+- **Here is the code for the two LLM calls**
+```
+for template_name, template in templates.items():
+
+    for idx, review in enumerate(reviews):
+
+        prompt = template.format(review=review)
+
+        response = call_llm(
+            prompt,
+            temperature=0.1,
+            max_tokens=1000,
+        )
+
+        if response is None:
+            continue
+
+        try:
+            print("####Raw response")
+            print(response)
+            response = re.sub(r"^```json\s*", "", response.strip())
+            response = re.sub(r"^```\s*", "", response)
+            response = re.sub(r"\s*```$", "", response)
+            parsed = json.loads(response)
+
+            parsed["template"] = template_name
+            parsed["record"] = idx
+
+            print(parsed)
+        except json.JSONDecodeError:
+
+            logging.error(
+                f"JSON parsing failed "
+                f"(Template={template_name}, Record={idx})"
+            )
+            continue
+            # -----------------------------
+            # TASK 6: Response drafting
+            # -----------------------------
+
+        aspect_json = json.dumps(parsed, indent=2)
+
+        response_prompt = RESPONSE_PROMPT.format(
+                aspect_analysis=aspect_json
+        )
+
+        drafted_reply = call_llm(
+                response_prompt,
+                temperature=0.2,
+                max_tokens=1000
+        )
+
+        if drafted_reply is None:
+                logging.error(
+                    f"Response drafting failed: Record={idx}"
+                )
+                continue
+
+        print("\nDRAFTED REPLY:")
+        print(drafted_reply)
+
+        # -----------------------------
+        # Save results
+        # -----------------------------
+        results.append({
+            "Record": idx,
+            "Fit Sentiment": parsed["fit_sizing"]["sentiment"],
+            "Fit_Action": parsed["fit_sizing"]["action"],
+            "Material sentiment": parsed["material_quality"]["sentiment"],
+            "Material Action": parsed["material_quality"]["action"],
+            "Manager Response": drafted_reply
+        })
+
+results_df = pd.DataFrame(results)
+```
+- **Execution run with the manager's response in a tabular format(Refer the table at the end of this output)**
+
 ```
 "C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
 INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
