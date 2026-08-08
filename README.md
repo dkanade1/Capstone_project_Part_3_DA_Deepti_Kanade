@@ -488,3 +488,179 @@ I’m sorry to hear that the size runs large and the sleeves are longer than exp
 Process finished with exit code 0
 
 ```
+## Task 7. Demonstrate multi-turn context
+
+A multi-turn conversation demonstrates that information from an earlier exchange can be retained and used to produce a context-aware response in a subsequent turn.
+- Turn 1
+The first prompt provides a customer review and asks the model to analyze the main issue.
+- Turn 2
+The second prompt asks the model to write a customer-service response using information from the previous exchange:
+- Conversation History Object
+The conversation history is stored as a list of role/content messages.
+
+```
+# ============================================================
+# TASK 7: Multi-turn conversation
+# ============================================================
+
+print("\n" + "=" * 60)
+print("TASK 7: MULTI-TURN CONTEXT")
+print("=" * 60)
+
+# Turn 1
+turn1_user = """
+Analyze the following customer review and identify the main issue,
+including any relevant details about fit and the positive aspects
+mentioned by the customer.
+
+Customer review:
+I took these out of the package and wanted them to fit so badly,
+but i could tell before i put them on that they wouldn't. these
+are for an hour-glass figure. i am more straight up and down.
+the waist was way too small for my body shape and even if i sized up,
+i could tell they would still be tight in the waist and too roomy
+in the hips - for me.
+that said, they are really nice. sturdy, linen-like fabric, pretty
+color, well made. i hope they make someone very happy!
+"""
+turn1_prompt = turn1_user
+
+turn1_response = call_llm(
+    turn1_prompt,
+    temperature=0.2,
+    max_tokens=500
+)
+
+print("\nTURN 1")
+print("User:")
+print(turn1_user)
+
+print("Assistant:")
+print(turn1_response)
+
+# ------------------------------------------------------------
+# Conversation history
+# ------------------------------------------------------------
+conversation_history = [
+    {
+        "role": "user",
+        "content": turn1_user.strip()
+    },
+    {
+        "role": "assistant",
+        "content": turn1_response.strip()
+    }
+]
+
+# Turn 2
+turn2_user = """
+Write a short, professional and empathetic customer-service response
+to this customer. Use the details from our previous conversation.
+Acknowledge both their fit concern and the positive comments they made.
+Do not ask them to repeat their issue.
+"""
+conversation_history.append({
+    "role": "user",
+    "content": turn2_user.strip()
+})
+
+# Create the prompt containing the conversation history
+history_text = "\n\n".join(
+    f"{message['role'].upper()}: {message['content']}"
+    for message in conversation_history
+)
+
+turn2_response = call_llm(
+    history_text,
+    temperature=0.2,
+    max_tokens=1000
+)
+
+conversation_history.append({
+    "role": "assistant",
+    "content": turn2_response.strip()
+})
+
+print("\nTURN 2")
+print("User:")
+print(turn2_user)
+
+print("Assistant:")
+print(turn2_response)
+# ------------------------------------------------------------
+# Show conversation history object
+# ------------------------------------------------------------
+print("\nCONVERSATION HISTORY OBJECT:")
+print(json.dumps(conversation_history, indent=2))
+```
+
+
+
+
+**Execution Run**
+```
+"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
+
+============================================================
+TASK 7: MULTI-TURN CONTEXT
+============================================================
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+MODEL CONTENT: '{"main_issue":"The waist is too small and tight for the customer\'s body shape, and the hips are too roomy, resulting in a poor fit.","fit_details":"The customer is straight up and down, not hourglass; even sizing up wouldn\'t fix the tight waist and loose hips.","positive_aspects":"Sturdy, linen-like fabric, pretty color, well made."}'
+
+TURN 1
+User:
+
+Analyze the following customer review and identify the main issue,
+including any relevant details about fit and the positive aspects
+mentioned by the customer.
+
+Customer review:
+I took these out of the package and wanted them to fit so badly,
+but i could tell before i put them on that they wouldn't. these
+are for an hour-glass figure. i am more straight up and down.
+the waist was way too small for my body shape and even if i sized up,
+i could tell they would still be tight in the waist and too roomy
+in the hips - for me.
+that said, they are really nice. sturdy, linen-like fabric, pretty
+color, well made. i hope they make someone very happy!
+
+Assistant:
+{"main_issue":"The waist is too small and tight for the customer's body shape, and the hips are too roomy, resulting in a poor fit.","fit_details":"The customer is straight up and down, not hourglass; even sizing up wouldn't fix the tight waist and loose hips.","positive_aspects":"Sturdy, linen-like fabric, pretty color, well made."}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+MODEL CONTENT: '{"response":"Thank you for sharing your experience with us. We’re sorry to hear that the waist didn’t fit as expected and that the hips felt too roomy for your body shape. We appreciate your kind words about the sturdy, linen‑like fabric, the beautiful color, and the overall quality of the garment. Your feedback is valuable, and we’ll use it to improve our sizing guidance. If there’s anything else we can do to assist you, please let us know."}'
+
+TURN 2
+User:
+
+Write a short, professional and empathetic customer-service response
+to this customer. Use the details from our previous conversation.
+Acknowledge both their fit concern and the positive comments they made.
+Do not ask them to repeat their issue.
+
+Assistant:
+{"response":"Thank you for sharing your experience with us. We’re sorry to hear that the waist didn’t fit as expected and that the hips felt too roomy for your body shape. We appreciate your kind words about the sturdy, linen‑like fabric, the beautiful color, and the overall quality of the garment. Your feedback is valuable, and we’ll use it to improve our sizing guidance. If there’s anything else we can do to assist you, please let us know."}
+
+CONVERSATION HISTORY OBJECT:
+[
+  {
+    "role": "user",
+    "content": "Analyze the following customer review and identify the main issue,\nincluding any relevant details about fit and the positive aspects\nmentioned by the customer.\n\nCustomer review:\nI took these out of the package and wanted them to fit so badly,\nbut i could tell before i put them on that they wouldn't. these\nare for an hour-glass figure. i am more straight up and down.\nthe waist was way too small for my body shape and even if i sized up,\ni could tell they would still be tight in the waist and too roomy\nin the hips - for me.\nthat said, they are really nice. sturdy, linen-like fabric, pretty\ncolor, well made. i hope they make someone very happy!"
+  },
+  {
+    "role": "assistant",
+    "content": "{\"main_issue\":\"The waist is too small and tight for the customer's body shape, and the hips are too roomy, resulting in a poor fit.\",\"fit_details\":\"The customer is straight up and down, not hourglass; even sizing up wouldn't fix the tight waist and loose hips.\",\"positive_aspects\":\"Sturdy, linen-like fabric, pretty color, well made.\"}"
+  },
+  {
+    "role": "user",
+    "content": "Write a short, professional and empathetic customer-service response\nto this customer. Use the details from our previous conversation.\nAcknowledge both their fit concern and the positive comments they made.\nDo not ask them to repeat their issue."
+  },
+  {
+    "role": "assistant",
+    "content": "{\"response\":\"Thank you for sharing your experience with us. We\u2019re sorry to hear that the waist didn\u2019t fit as expected and that the hips felt too roomy for your body shape. We appreciate your kind words about the sturdy, linen\u2011like fabric, the beautiful color, and the overall quality of the garment. Your feedback is valuable, and we\u2019ll use it to improve our sizing guidance. If there\u2019s anything else we can do to assist you, please let us know.\"}"
+  }
+]
+
+Process finished with exit code 0
+
+```
+
