@@ -2,9 +2,9 @@
 ### Database Schema :Women's E-Commerce Clothing Reviews
 This is a Women’s Clothing E-Commerce dataset revolving around the reviews written by customers. Each row corresponds to a customer review, and includes the variables:Clothing ID,Age,Title,Review Text,Rating,Recommended IND,Positive Feedback Count,Division Name,Department Name, Class Name.
 ## Prerequisites
-Before getting started, make sure your development environment meets the following requirements:
-Python: Version 3.11 
-For the rest refer to requirements.txt
+Before getting started, make sure your development environment meets the following requirements:**Python: Version 3.11**
+
+For the rest refer to **requirements.txt**
 
 ## Task 1.	Design three prompt templates 
 # Zero-Shot Prompt Template
@@ -95,7 +95,7 @@ Review:
 {{review_text}}
 ```
 # Role-Based Template (Using ECO Framework)
-The role-prompted template begins with an explicit persona. It explicitly applies the ECO framework:Instruction, Context and Constraints for the LLM.
+The role-prompted template begins with an explicit persona. It explicitly applies the ECO framework:Instruction, Context and Constraints  and provides clearer instructions and context for the LLM.
 ```
 Role
 
@@ -136,52 +136,26 @@ Output
 Review:
 {review}
 ```
-**Here is the retry logic for call_llm() failures (network error, rate limit, or non-200/error response),It  retries up to 3 times before logging a descriptive error and moving on,**
-Error Handling
 
-Several forms of error handling were included in the project.
-
-API errors
-
-API failures are retried up to three times.
-
-JSON parsing errors
-
-Invalid JSON responses are caught using:
-
-try:
-    parsed = json.loads(response)
-except json.JSONDecodeError:
-    ...
-
-The program logs the template and record instead of terminating.
-
-Missing reviews
-
-Records without review text are removed before processing:
-
-df["Review Text"].dropna()
-Invalid model output
-
-The system removes accidental Markdown code fences before attempting JSON parsing:
-
-response = re.sub(r"^```json\s*", "", response.strip())
-response = re.sub(r"^```\s*", "", response)
-response = re.sub(r"\s*```$", "", response)
-
+## Task 2.	Implement a reusable API wrapper
+ A reusable Python function called call_llm() was implemented.
+- The function:
+- Accepts a prompt
+- Accepts temperature
+- Accepts max_tokens
+- Sends the request to the LLM
+- Returns the model's text response
+- **Error handling is also implemented for upto 3 retries for failures in call_llm API call**
+   
 ```
-def call_llm(prompt, temperature=0.2, max_tokens=300):
+def call_llm(prompt, temperature=0.2, max_tokens=500):
     """
     Send a prompt to OpenRouter and return the model's response.
     Retries up to 3 times if an error occurs.
     """
-
-    retries = 3
-
+     retries = 3
     for attempt in range(retries):
-
         try:
-
             response = client.chat.completions.create(
                 model="openai/gpt-oss-20b:free",
                 messages=[
@@ -192,16 +166,16 @@ def call_llm(prompt, temperature=0.2, max_tokens=300):
                 ],
                 temperature=temperature,
                 max_tokens=max_tokens,
+                response_format={"type": "json_object"}
             )
-
-            return response.choices[0].message.content
-
+            #return response.choices[0].message.content
+            content = response.choices[0].message.content
+            print("MODEL CONTENT:", repr(content))
+            return content
         except Exception as e:
-
             logging.warning(
                 f"Attempt {attempt+1}/{retries} failed: {e}"
             )
-
             if attempt < retries - 1:
                 time.sleep(5)
             else:
@@ -209,50 +183,11 @@ def call_llm(prompt, temperature=0.2, max_tokens=300):
                     "LLM request failed after 3 attempts."
                 )
                 return None
-
-```
-**Output showing retries after api call fails due to too many requests**
-```
-"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
-INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
-{'label': 'Negative', 'confidence': 'High', 'reason': 'The reviewer explicitly states the material feels cheap, expresses disappointment, and indicates they will return the item.', 'template': 'Zero-shot', 'record': 0}
-INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
-INFO:openai._base_client:Retrying request to /chat/completions in 24.000000 seconds
-INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
 ```
 
-**Here is the error handling code for Json parsing.It removes the leading and  trailing quotes from the Json response and load it**
-```
-        try:
-            response = re.sub(r"^```json\s*", "", response.strip())
-            response = re.sub(r"^```\s*", "", response)
-            response = re.sub(r"\s*```$", "", response)
-            parsed = json.loads(response)
 
-            parsed["template"] = template_name
-            parsed["record"] = idx
-
-            results.append(parsed)
-
-            print(parsed)
-
-        except json.JSONDecodeError:
-
-            logging.error(
-                f"JSON parsing failed "
-                f"(Template={template_name}, Record={idx})"
-            )
-```
-## Task 2.	Implement a reusable API wrapper
- A reusable Python function called call_llm() was implemented.
-The function:
-Accepts a prompt
-Accepts temperature
-Accepts max_tokens
-Sends the request to the LLM
-Returns the model's text response
-
-The API key is loaded from an environment variable rather than being hardcoded in the source code . **Environment variable used :"OPENROUTER_API_KEY"**
+The API key is loaded from an environment variable rather than being hardcoded in the source code .
+**Environment variable used :"OPENROUTER_API_KEY"**
 ```
 api_key = os.getenv("OPENROUTER_API_KEY")
 
@@ -264,6 +199,65 @@ client = OpenAI(
     base_url="https://openrouter.ai/api/v1"
 )
 ```
+## Task 3 : Error handling 
+Several forms of error handling were included in the project.
+- API errors
+API failures are retried up to three times.
+- JSON parsing errors
+Invalid JSON responses are caught using:
+```
+try:
+    parsed = json.loads(response)
+except json.JSONDecodeError:
+    ...
+```
+- The program logs the template and record instead of terminating.
+- Missing reviews Records are removed before processing:
+
+```df["Review Text"].dropna()```
+- The system removes accidental Markdown code fences before attempting JSON parsing:
+```
+response = re.sub(r"^```json\s*", "", response.strip())
+response = re.sub(r"^```\s*", "", response)
+response = re.sub(r"\s*```$", "", response)
+```
+**Output showing retries after api call fails due to too many requests**
+```
+"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'label': 'Negative', 'confidence': 'High', 'reason': 'The reviewer explicitly states the material feels cheap, expresses disappointment, and indicates they will return the item.', 'template': 'Zero-shot', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 429 Too Many Requests"
+INFO:openai._base_client:Retrying request to /chat/completions in 24.000000 seconds
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+```
+**Output showing JSON parsing failed erros**
+```
+"C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+{'fit_sizing': {'sentiment': 'Neutral', 'action': 'Fit not discussed'}, 'material_quality': {'sentiment': 'Negative', 'action': 'Material feels cheap'}, 'template': 'Role', 'record': 0}
+INFO:httpx:HTTP Request: POST https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 OK"
+ERROR:root:JSON parsing failed (Template=Role, Record=1)
+   record fit_sentiment         fit_action material_sentiment       material_action
+0       0       Neutral  Fit not discussed           Negative  Material feels cheap
+
+Process finished with exit code 0
+```
+
+
+## Task 4.	Run all three templates on the same five real records from your dataset 
+The three sentiment templates were tested on the same dataset records.
+
+For each record, the program:
+
+- Inserts the review into the prompt.
+- Sends the prompt to the LLM.
+- Receives the model response.
+- Parses the response as JSON.
+- Checks whether the response follows the required schema.
+- Logs parsing failures instead of crashing.
+
+**The few-shot,zero shot  and role-prompted templates performed well in terms of classification results and JSON/schema conformity.Only the 4th  review was classified as Positive by zero-shot and role-prompted ,whereas Neutral by few-shot template. All achieved valid, schema-conformant responses.But based on the Output quality, i.e the reason being concise and relevant ,the role based prompt can be considered superior templates in this particular case.**
+
  **Here is the output of call_llm executed for each prompt template(zero shot, few shot and role based prompt) on 5 reviews and its comparison***
 
 ```
@@ -323,9 +317,18 @@ Process finished with exit code 0
 
 ```
 
-**The few-shot,zero shot  and role-prompted templates performed well in terms of classification results and JSON/schema conformity.Only the 4th  review was classified as Positive by zero-shot and role-prompted ,whereas Neutral by few-shot template. All achieved valid, schema-conformant responses.But based on the Output quality, i.e the reason being concise and relevant ,the role based prompt can be considered superior templates in this particular case.**
-
 ## Task 5.	Build an aspect-based sentiment extension
+The best-performing role-prompted template was extended to perform aspect-based sentiment analysis.
+
+Two aspects relevant to clothing reviews were selected:
+
+- Fit & Sizing
+- Material & Quality
+
+For each aspect, the model returns:
+- Sentiment
+- A short actionable phrase describing what was liked or disliked
+  
 **Modified prompt to do aspect-based sentiment analysis**
 ```
 Role
@@ -392,7 +395,7 @@ Review:
 Process finished with exit code 0
 ```
 ## Task 6: Chained Response Drafting
-
+A second LLM prompt was created to demonstrate prompt chaining.
 The structured aspect sentiment output from Task 5 was passed into a second
 LLM prompt to generate a customer-facing response. The drafting prompt was
 instructed to address the specific issues identified for each record rather
@@ -652,10 +655,7 @@ print("\nCONVERSATION HISTORY OBJECT:")
 print(json.dumps(conversation_history, indent=2))
 ```
 
-
-
-
-**Execution Run**
+**Execution Run with Conversation history object displayed at the emd.**
 ```
 "C:\AI Capstone project\Part 3\.venv\Scripts\python.exe" "C:/AI Capstone project/Part 3/main.py"
 
